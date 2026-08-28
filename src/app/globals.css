@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme {
+  --color-mosque-emerald: #047857;
+  --color-mosque-emerald-dark: #064e3b;
+  --color-mosque-emerald-deep: #022c22;
+  --color-mosque-emerald-light: #059669;
+  --color-mosque-emerald-soft: #ecfdf5;
+
+  --color-mosque-gold: #d4af37;
+  --color-mosque-gold-light: #fef08a;
+  --color-mosque-gold-hover: #f59e0b;
+  --color-mosque-gold-dark: #b45309;
+
+  --font-inter: var(--font-inter), system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-inter);
+  overflow-x: hidden;
+}
