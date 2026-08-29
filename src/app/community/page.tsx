@@ -96,7 +96,7 @@ export default function CommunityPage() {
                   Drop-Off Location on Property
                 </h3>
                 <p className="text-sm text-emerald-100/90 leading-relaxed">
-                  The official <strong>HEARTs Clothing Donation Box</strong> is located in the <strong>main parking lot next to the South Entrance</strong> (520 French Road). It is easily accessible by vehicle anytime day or night.
+                  The official <strong>HEARTs Clothing Donation Box</strong> is located in the <strong>main parking lot next to the South Entrance</strong> (94 Meridian St, Depew, NY 14043). It is easily accessible by vehicle anytime day or night.
                 </p>
                 <div className="pt-2 text-xs text-amber-300/80 flex items-center gap-2">
                   <span>📍 Drive up & drop off your donation bag anytime.</span>
