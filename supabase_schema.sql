@@ -28,37 +28,47 @@ CREATE TABLE IF NOT EXISTS public.projects (
     created_at TIMESTAMPTZ DEFAULT now()
 );
 
--- Enable Row Level Security (RLS) on both tables
+-- 3. Create programs table
+CREATE TABLE IF NOT EXISTS public.programs (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    title TEXT NOT NULL,
+    description TEXT NOT NULL,
+    category TEXT DEFAULT 'General',
+    schedule TEXT,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMPTZ DEFAULT now()
+);
+
+-- Enable Row Level Security (RLS) on all tables
 ALTER TABLE public.announcements ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.projects ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.programs ENABLE ROW LEVEL SECURITY;
 
 -- Create RLS Policies for Public Read Access (SELECT)
 DROP POLICY IF EXISTS "Allow public read access on announcements" ON public.announcements;
 CREATE POLICY "Allow public read access on announcements"
-    ON public.announcements
-    FOR SELECT
-    USING (true);
+    ON public.announcements FOR SELECT USING (true);
 
 DROP POLICY IF EXISTS "Allow public read access on projects" ON public.projects;
 CREATE POLICY "Allow public read access on projects"
-    ON public.projects
-    FOR SELECT
-    USING (true);
+    ON public.projects FOR SELECT USING (true);
 
--- RLS Policies for Write Access (Insert/Update/Delete) for Client Admin Portal
+DROP POLICY IF EXISTS "Allow public read access on programs" ON public.programs;
+CREATE POLICY "Allow public read access on programs"
+    ON public.programs FOR SELECT USING (true);
+
+-- RLS Policies for Write Access
 DROP POLICY IF EXISTS "Allow public write access on announcements" ON public.announcements;
 CREATE POLICY "Allow public write access on announcements"
-    ON public.announcements
-    FOR ALL
-    USING (true)
-    WITH CHECK (true);
+    ON public.announcements FOR ALL USING (true) WITH CHECK (true);
 
 DROP POLICY IF EXISTS "Allow public write access on projects" ON public.projects;
 CREATE POLICY "Allow public write access on projects"
-    ON public.projects
-    FOR ALL
-    USING (true)
-    WITH CHECK (true);
+    ON public.projects FOR ALL USING (true) WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public write access on programs" ON public.programs;
+CREATE POLICY "Allow public write access on programs"
+    ON public.programs FOR ALL USING (true) WITH CHECK (true);
 
 -- Insert initial seed data for announcements
 INSERT INTO public.announcements (message, badge, action_url, action_text, is_active)
@@ -74,3 +84,10 @@ VALUES
 ('Main Prayer Hall Carpet & Acoustic Sound System', 'Renovation', 'Installed high-density antimicrobial plush prayer carpeting with woven saf lines, along with a state-of-the-art wireless microphone audio system.', 'Completed', 55000, 55000, 'Spring 2026', 'Serves 500+ daily worshippers with crystal clear sermon sound quality.'),
 ('Community Food Pantry & Cold Storage Unit', 'Social Welfare', 'Purchased commercial walk-in refrigeration units to store fresh produce and halal meats for weekly food distribution to local families.', 'Completed', 25000, 25000, 'Winter 2025', 'Distributes over 400+ fresh meal boxes to WNY families every month.'),
 ('Parking Lot Repaving & LED Security Floodlights', 'Facility Upgrades', 'Resurfaced the entire parking facility with eco-friendly asphalt, added marked spots, and installed high-efficiency dusk-to-dawn LED security lighting.', 'Completed', 40000, 40000, 'Autumn 2025', 'Ensures safety and smooth traffic flow during Friday Jummah & Isha prayers.');
+
+-- Insert initial seed data for programs
+INSERT INTO public.programs (title, description, category, schedule, is_active)
+VALUES
+('Weekend Islamic School', 'Comprehensive Quran, Islamic Studies, and Arabic classes for children ages 5-16.', 'Education', 'Sundays 10:00 AM - 1:30 PM', true),
+('Adult Quran & Tajweed Halaqa', 'Weekly Tajweed refinement and Quranic reflections for adults.', 'Halaqa', 'Tuesdays after Isha Prayer', true),
+('Youth Sports & Mentorship', 'Weekly basketball games, youth mentoring, and leadership workshops.', 'Youth', 'Saturdays 5:00 PM', true);

@@ -1,28 +1,10 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, type Announcement, type Project } from "@/lib/supabase";
 
-interface AnnouncementRow {
-  id?: string;
-  message: string;
-  badge: string;
-  action_url: string;
-  action_text: string;
-  is_active: boolean;
-}
-
-interface ProjectRow {
-  id?: string;
-  title: string;
-  category: string;
-  description: string;
-  status: "Active" | "Completed";
-  goal_amount: number;
-  raised_amount: number;
-  completed_date?: string;
-  impact_note?: string;
-}
+type AnnouncementRow = Announcement;
+type ProjectRow = Project & { status: "Active" | "Completed" };
 
 export default function AdminPortalPage() {
   // Announcement state
