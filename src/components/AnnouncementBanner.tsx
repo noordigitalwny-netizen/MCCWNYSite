@@ -1,29 +1,16 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { supabase } from "@/lib/supabase";
+import { supabase, type Announcement } from "@/lib/supabase";
 
-export interface AnnouncementBannerProps {
-  message?: string;
-  badge?: string;
-  actionUrl?: string;
-  actionText?: string;
-  dismissible?: boolean;
-}
-
-export default function AnnouncementBanner({
-  message: initialMessage = "Welcome to MCC WNY – Muslim Community Center of Western New York",
-  badge: initialBadge = "Announcement",
-  actionUrl: initialActionUrl = "#prayer-times",
-  actionText: initialActionText = "View Prayer Times",
-  dismissible = true,
-}: AnnouncementBannerProps) {
+export default function AnnouncementBanner() {
   const [isVisible, setIsVisible] = useState(true);
-  const [announcement, setAnnouncement] = useState({
-    message: initialMessage,
-    badge: initialBadge,
-    actionUrl: initialActionUrl,
-    actionText: initialActionText,
+  const [announcement, setAnnouncement] = useState<Announcement>({
+    message: "Welcome to MCC WNY – Muslim Community Center of Western New York",
+    badge: "Announcement",
+    action_url: "#prayer-times",
+    action_text: "View Prayer Times",
+    is_active: true,
   });
 
   useEffect(() => {
@@ -32,23 +19,18 @@ export default function AnnouncementBanner({
         const { data, error } = await supabase
           .from("announcements")
           .select("*")
+          .eq("is_active", true)
           .order("created_at", { ascending: false })
           .limit(1);
 
-        if (error) return;
+        if (error) throw error;
 
         if (data && data.length > 0) {
-          const live = data[0];
-          if (live.is_active === false) {
-            setIsVisible(false);
-            return;
-          }
-          setAnnouncement({
-            message: live.message || initialMessage,
-            badge: live.badge || initialBadge,
-            actionUrl: live.action_url || initialActionUrl,
-            actionText: live.action_text || initialActionText,
-          });
+          setAnnouncement(data[0]);
+          setIsVisible(true);
+        } else {
+          // If no active announcement exists, hide banner
+          setIsVisible(false);
         }
       } catch (err) {
         console.warn("Using fallback announcement:", err);
@@ -56,7 +38,7 @@ export default function AnnouncementBanner({
     }
 
     fetchLiveAnnouncement();
-  }, [initialMessage, initialBadge, initialActionUrl, initialActionText]);
+  }, []);
 
   if (!isVisible) return null;
 
@@ -77,36 +59,34 @@ export default function AnnouncementBanner({
         </div>
 
         <div className="flex items-center gap-3 shrink-0">
-          {announcement.actionUrl && announcement.actionText && (
+          {announcement.action_url && announcement.action_text && (
             <a
-              href={announcement.actionUrl}
+              href={announcement.action_url}
               className="inline-flex items-center text-xs font-semibold text-amber-300 hover:text-amber-200 underline underline-offset-2 transition-colors"
             >
-              {announcement.actionText} &rarr;
+              {announcement.action_text} &rarr;
             </a>
           )}
 
-          {dismissible && (
-            <button
-              onClick={() => setIsVisible(false)}
-              className="p-1 rounded-md text-amber-300/70 hover:text-amber-200 hover:bg-emerald-800/50 transition-colors focus:outline-none focus:ring-1 focus:ring-amber-400"
-              aria-label="Dismiss banner"
+          <button
+            onClick={() => setIsVisible(false)}
+            className="p-1 rounded-md text-amber-300/70 hover:text-amber-200 hover:bg-emerald-800/50 transition-colors focus:outline-none focus:ring-1 focus:ring-amber-400"
+            aria-label="Dismiss banner"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
             >
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M6 18L18 6M6 6l12 12"
-                />
-              </svg>
-            </button>
-          )}
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M6 18L18 6M6 6l12 12"
+              />
+            </svg>
+          </button>
         </div>
       </div>
     </div>

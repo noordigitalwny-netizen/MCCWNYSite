@@ -2,26 +2,18 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
-import { supabase } from "@/lib/supabase";
+import { supabase, type Project } from "@/lib/supabase";
 
-export interface ProjectCampaign {
-  id: string;
-  title: string;
-  category: string;
-  description: string;
-  goal: number;
-  raised: number;
-}
-
-const mockActiveCampaigns: ProjectCampaign[] = [
+const fallbackActiveCampaigns: Project[] = [
   {
     id: "1",
     title: "Masjid Expansion & Sister's Community Lounge",
     category: "Expansion",
     description:
       "Expanding our main prayer hall capacity by 300+ worshippers and constructing a modern, multi-purpose sister's lounge & youth center.",
-    goal: 150000,
-    raised: 98500,
+    status: "Active",
+    goal_amount: 150000,
+    raised_amount: 98500,
   },
   {
     id: "2",
@@ -29,8 +21,9 @@ const mockActiveCampaigns: ProjectCampaign[] = [
     category: "Sustainability",
     description:
       "Installing rooftop solar panel arrays to cut annual utility costs and transition MCC WNY to clean, renewable energy.",
-    goal: 45000,
-    raised: 32000,
+    status: "Active",
+    goal_amount: 45000,
+    raised_amount: 32000,
   },
   {
     id: "3",
@@ -38,13 +31,14 @@ const mockActiveCampaigns: ProjectCampaign[] = [
     category: "Youth & Sports",
     description:
       "Upgrading indoor sports equipment, carpeting, audio-visual systems, and study spaces for our weekend Islamic school students.",
-    goal: 30000,
-    raised: 12400,
+    status: "Active",
+    goal_amount: 30000,
+    raised_amount: 12400,
   },
 ];
 
 export default function ActiveCampaigns({ limit }: { limit?: number }) {
-  const [campaigns, setCampaigns] = useState<ProjectCampaign[]>(mockActiveCampaigns);
+  const [campaigns, setCampaigns] = useState<Project[]>(fallbackActiveCampaigns);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -59,18 +53,10 @@ export default function ActiveCampaigns({ limit }: { limit?: number }) {
         if (error) throw error;
 
         if (data && data.length > 0) {
-          const mapped: ProjectCampaign[] = data.map((item) => ({
-            id: item.id,
-            title: item.title,
-            category: item.category || "Community",
-            description: item.description,
-            goal: Number(item.goal_amount || item.goal || 0),
-            raised: Number(item.raised_amount || item.raised || 0),
-          }));
-          setCampaigns(mapped);
+          setCampaigns(data);
         }
       } catch (err) {
-        console.warn("Using default active campaigns:", err);
+        console.warn("Using default active campaigns fallback:", err);
       } finally {
         setLoading(false);
       }
@@ -104,23 +90,26 @@ export default function ActiveCampaigns({ limit }: { limit?: number }) {
       </div>
 
       {loading && campaigns.length === 0 ? (
-        <div className="p-8 text-center text-xs text-slate-500">Loading active campaigns...</div>
+        <div className="p-8 text-center text-xs text-slate-500 font-medium">
+          Loading live active campaigns...
+        </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {displayCampaigns.map((campaign) => {
-            const percent =
-              campaign.goal > 0 ? Math.min(100, Math.round((campaign.raised / campaign.goal) * 100)) : 0;
+            const goal = Number(campaign.goal_amount || 0);
+            const raised = Number(campaign.raised_amount || 0);
+            const percent = goal > 0 ? Math.min(100, Math.round((raised / goal) * 100)) : 0;
 
             return (
               <div
-                key={campaign.id}
+                key={campaign.id || campaign.title}
                 className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-shadow flex flex-col justify-between overflow-hidden group"
               >
                 {/* Card Header & Category Badge */}
                 <div className="p-6 space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="inline-block px-2.5 py-1 rounded-md text-xs font-semibold bg-emerald-100/80 text-emerald-900 border border-emerald-300/40 uppercase tracking-wider">
-                      {campaign.category}
+                      {campaign.category || "Community"}
                     </span>
                     <span className="text-xs font-bold text-amber-600 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
                       {percent}% Funded
@@ -148,10 +137,10 @@ export default function ActiveCampaigns({ limit }: { limit?: number }) {
                     </div>
                     <div className="flex items-center justify-between text-xs font-medium text-slate-600 pt-1">
                       <span>
-                        Raised: <strong className="text-emerald-950 font-bold">${campaign.raised.toLocaleString()}</strong>
+                        Raised: <strong className="text-emerald-950 font-bold">${raised.toLocaleString()}</strong>
                       </span>
                       <span>
-                        Goal: <strong className="text-slate-800 font-bold">${campaign.goal.toLocaleString()}</strong>
+                        Goal: <strong className="text-slate-800 font-bold">${goal.toLocaleString()}</strong>
                       </span>
                     </div>
                   </div>

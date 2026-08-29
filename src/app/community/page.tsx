@@ -1,53 +1,74 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
+import { supabase, type Program } from "@/lib/supabase";
+
+const fallbackInitiatives: Program[] = [
+  {
+    id: "cleanup",
+    title: "Neighborhood Clean-Up Drives",
+    category: "Volunteer Program",
+    description:
+      "Join neighbors, youth, and local residents in seasonal street, park, and property cleanup efforts around Depew and Williamsville.",
+    schedule: "Next Drive: Saturday morning at 9:00 AM. Refreshments provided.",
+    is_active: true,
+  },
+  {
+    id: "blood",
+    title: "Mobile Blood Donation Days",
+    category: "Healthcare & Life Saving",
+    description:
+      "Partnering with ConnectLife & American Red Cross to host quarterly blood drives in our community hall to support local hospitals.",
+    schedule: "Next Blood Drive: Fall 2026. Walk-ins & appointments welcome.",
+    is_active: true,
+  },
+  {
+    id: "openhouse",
+    title: '"Know Your Neighbor" Open Houses',
+    category: "Interfaith & Dialogue",
+    description:
+      "Welcoming all WNY neighbors of all backgrounds, faiths, and cultures for guided tours, open Q&A sessions, and shared community dinners.",
+    schedule: "Held quarterly on Sunday afternoons. Open to everyone in Western NY.",
+    is_active: true,
+  },
+  {
+    id: "foodpantry",
+    title: "Community Food Pantry Drives",
+    category: "Social Welfare",
+    description:
+      "Collecting and distributing non-perishable food items, fresh produce, and essential hygiene kits to local food banks and families in need.",
+    schedule: "Drop-off box open Mon–Fri in the main foyer.",
+    is_active: true,
+  },
+];
 
 export default function CommunityPage() {
-  const initiatives = [
-    {
-      id: "cleanup",
-      title: "Neighborhood Clean-Up Drives",
-      icon: "🧹",
-      tag: "Volunteer Program",
-      description:
-        "Join neighbors, youth, and local residents in seasonal street, park, and property cleanup efforts around Depew and Williamsville.",
-      details: "Next Drive: Saturday morning at 9:00 AM. Refreshments provided.",
-      hasSignup: true,
-      signupText: "Sign Up as Volunteer",
-    },
-    {
-      id: "blood",
-      title: "Mobile Blood Donation Days",
-      icon: "🩸",
-      tag: "Healthcare & Life Saving",
-      description:
-        "Partnering with ConnectLife & American Red Cross to host quarterly blood drives in our community hall to support local hospitals.",
-      details: "Next Blood Drive: Fall 2026. Walk-ins & appointments welcome.",
-      hasSignup: true,
-      signupText: "Schedule Appointment",
-    },
-    {
-      id: "openhouse",
-      title: '"Know Your Neighbor" Open Houses',
-      icon: "🤝",
-      tag: "Interfaith & Dialogue",
-      description:
-        "Welcoming all WNY neighbors of all backgrounds, faiths, and cultures for guided tours, open Q&A sessions, and shared community dinners.",
-      details: "Held quarterly on Sunday afternoons. Open to everyone in Western NY.",
-      hasSignup: false,
-    },
-    {
-      id: "foodpantry",
-      title: "Community Food Pantry Drives",
-      icon: "🍞",
-      tag: "Social Welfare",
-      description:
-        "Collecting and distributing non-perishable food items, fresh produce, and essential hygiene kits to local food banks and families in need.",
-      details: "Drop-off box open Mon–Fri in the main foyer.",
-      hasSignup: true,
-      signupText: "Donate or Volunteer",
-    },
-  ];
+  const [programs, setPrograms] = useState<Program[]>(fallbackInitiatives);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchActivePrograms() {
+      try {
+        const { data, error } = await supabase
+          .from("programs")
+          .select("*")
+          .eq("is_active", true)
+          .order("created_at", { ascending: false });
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          setPrograms(data);
+        }
+      } catch (err) {
+        console.warn("Using default community programs fallback:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchActivePrograms();
+  }, []);
 
   const acceptedItems = [
     "Clean, gently used clothing (all ages & sizes)",
@@ -143,7 +164,7 @@ export default function CommunityPage() {
           </div>
         </section>
 
-        {/* 3. Community Initiatives Grid */}
+        {/* 3. Community Initiatives Grid (Live Supabase Programs) */}
         <section className="space-y-6">
           <div className="border-b border-emerald-900/10 pb-3">
             <h2 className="text-2xl font-extrabold text-emerald-950 flex items-center gap-2">
@@ -155,47 +176,55 @@ export default function CommunityPage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {initiatives.map((item) => (
-              <div
-                key={item.id}
-                className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col justify-between space-y-5 group"
-              >
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-3xl">{item.icon}</span>
-                    <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-900 border border-emerald-200">
-                      {item.tag}
-                    </span>
+          {loading && programs.length === 0 ? (
+            <div className="p-8 text-center text-xs text-slate-500 font-medium">
+              Loading community programs...
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {programs.map((item) => (
+                <div
+                  key={item.id || item.title}
+                  className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition-shadow p-6 flex flex-col justify-between space-y-5 group"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-3xl">🤝</span>
+                      <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-900 border border-emerald-200">
+                        {item.category || "General"}
+                      </span>
+                    </div>
+
+                    <h3 className="text-xl font-bold text-slate-900 group-hover:text-[#047857] transition-colors">
+                      {item.title}
+                    </h3>
+
+                    <p className="text-xs text-slate-600 leading-relaxed">
+                      {item.description}
+                    </p>
                   </div>
 
-                  <h3 className="text-xl font-bold text-slate-900 group-hover:text-[#047857] transition-colors">
-                    {item.title}
-                  </h3>
+                  <div className="pt-4 border-t border-slate-100 space-y-4">
+                    {item.schedule && (
+                      <div className="text-xs text-slate-500 flex items-center gap-1.5">
+                        <span className="text-amber-500 font-bold">📅</span>
+                        <span>{item.schedule}</span>
+                      </div>
+                    )}
 
-                  <p className="text-xs text-slate-600 leading-relaxed">
-                    {item.description}
-                  </p>
-                </div>
-
-                <div className="pt-4 border-t border-slate-100 space-y-4">
-                  <div className="text-xs text-slate-500 flex items-center gap-1.5">
-                    <span className="text-amber-500 font-bold">📅</span>
-                    <span>{item.details}</span>
-                  </div>
-
-                  {item.hasSignup && (
                     <button
-                      onClick={() => alert(`Thank you for your interest in ${item.title}! Sign-up details will be published soon.`)}
+                      onClick={() =>
+                        alert(`Thank you for your interest in ${item.title}! Sign-up or contact details will be published soon.`)
+                      }
                       className="w-full py-2.5 px-4 rounded-xl text-xs font-bold bg-[#047857] text-white hover:bg-emerald-800 hover:shadow-sm active:scale-95 transition-all border border-amber-400/30"
                     >
-                      {item.signupText}
+                      Learn More / Volunteer
                     </button>
-                  )}
+                  </div>
                 </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </div>
