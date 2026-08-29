@@ -1,19 +1,20 @@
 import { createClient } from "@supabase/supabase-js";
 
-// Retrieve environment variables
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://ziugkjvrxnkxkjvhpqyq.supabase.co";
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "sb_publishable_gKPHaOCcXLPsoxpUFmnEaA_vs8h0gp4";
+// Retrieve environment variables with fallbacks to avoid build-time prerender crashes on Vercel
+const supabaseUrl =
+  process.env.NEXT_PUBLIC_SUPABASE_URL && process.env.NEXT_PUBLIC_SUPABASE_URL.startsWith("http")
+    ? process.env.NEXT_PUBLIC_SUPABASE_URL
+    : "https://placeholder.supabase.co";
+
+const supabaseAnonKey =
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder_key";
 
 // Public Supabase Client (Client-Side & Public Reads)
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 // Server-Side Supabase Admin Client (Bypasses RLS using Service Role Key)
 export const createAdminClient = () => {
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceRoleKey) {
-    console.warn("SUPABASE_SERVICE_ROLE_KEY is not defined. Falling back to default public client.");
-    return supabase;
-  }
+  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY || supabaseAnonKey;
   return createClient(supabaseUrl, serviceRoleKey, {
     auth: {
       persistSession: false,
