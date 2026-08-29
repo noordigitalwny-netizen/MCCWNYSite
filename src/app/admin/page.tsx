@@ -287,11 +287,24 @@ export default function AdminPortalPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <div className="bg-emerald-900/80 border border-amber-400/30 px-4 py-2 rounded-xl text-xs text-amber-300 flex items-center gap-2">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               <span>Supabase Service Role</span>
             </div>
+
+            <a
+              href="https://mccwny.vercel.app/login"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-xs font-extrabold bg-emerald-900/90 text-amber-300 hover:text-amber-200 hover:bg-emerald-800 rounded-xl transition-colors shadow-md border border-amber-400/40"
+            >
+              <span>Access User Portal</span>
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+              </svg>
+            </a>
+
             <form action={logoutAdmin}>
               <button
                 type="submit"
