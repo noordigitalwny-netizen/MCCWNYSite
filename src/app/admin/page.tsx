@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { supabase, type Announcement, type Project } from "@/lib/supabase";
+import { logoutAdmin } from "./actions";
 
 type AnnouncementRow = Announcement;
 type ProjectRow = Project & { status: "Active" | "Completed" };
@@ -247,9 +248,19 @@ export default function AdminPortalPage() {
               Manage live website announcements, active fundraising campaigns, and completed projects.
             </p>
           </div>
-          <div className="bg-emerald-900/80 border border-amber-400/30 px-4 py-2 rounded-xl text-xs text-amber-300 flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            <span>Connected to Supabase Database</span>
+          <div className="flex items-center gap-3">
+            <div className="bg-emerald-900/80 border border-amber-400/30 px-4 py-2 rounded-xl text-xs text-amber-300 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+              <span>Connected to Supabase</span>
+            </div>
+            <form action={logoutAdmin}>
+              <button
+                type="submit"
+                className="px-4 py-2 text-xs font-bold bg-amber-400 text-emerald-950 rounded-xl hover:bg-amber-300 transition-colors shadow-md border border-amber-300"
+              >
+                Sign Out
+              </button>
+            </form>
           </div>
         </div>
       </section>
