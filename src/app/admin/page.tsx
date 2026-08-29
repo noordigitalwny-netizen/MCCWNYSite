@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Announcement, Project, Program } from "@/lib/supabase";
+import { Announcement, Project, Program, NewsItem } from "@/lib/supabase";
 import {
   logoutAdmin,
   getAdminData,
@@ -11,10 +11,13 @@ import {
   saveProgramAction,
   toggleProgramActiveAction,
   deleteProgramAction,
+  saveNewsAction,
+  toggleNewsActiveAction,
+  deleteNewsAction,
 } from "./actions";
 
 export default function AdminPortalPage() {
-  const [activeTab, setActiveTab] = useState<"announcement" | "projects" | "programs">("announcement");
+  const [activeTab, setActiveTab] = useState<"announcement" | "projects" | "programs" | "news">("announcement");
   const [toastMessage, setToastMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Announcement State
@@ -54,6 +57,18 @@ export default function AdminPortalPage() {
   });
   const [loadingProgram, setLoadingProgram] = useState(false);
 
+  // News State
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [editingNews, setEditingNews] = useState<NewsItem | null>(null);
+  const [newsForm, setNewsForm] = useState<NewsItem>({
+    title: "",
+    content: "",
+    date: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+    image_url: "",
+    is_active: true,
+  });
+  const [loadingNews, setLoadingNews] = useState(false);
+
   // Show Toast Helper
   const showToast = (type: "success" | "error", text: string) => {
     setToastMessage({ type, text });
@@ -71,6 +86,9 @@ export default function AdminPortalPage() {
       }
       setProjects(data.projects);
       setPrograms(data.programs);
+      if (data.news) {
+        setNews(data.news);
+      }
     } catch (err) {
       console.warn("Could not fetch admin data via Server Action:", err);
     }
@@ -86,6 +104,7 @@ export default function AdminPortalPage() {
           if (data.announcement) setAnnouncement(data.announcement);
           setProjects(data.projects);
           setPrograms(data.programs);
+          if (data.news) setNews(data.news);
         }
       } catch (err) {
         console.warn("Could not fetch initial admin data:", err);
@@ -254,6 +273,77 @@ export default function AdminPortalPage() {
     }
   };
 
+  // 4. Save News Item (Add / Edit)
+  const handleSaveNews = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoadingNews(true);
+
+    const res = await saveNewsAction({
+      id: editingNews?.id,
+      title: newsForm.title,
+      content: newsForm.content,
+      date: newsForm.date,
+      image_url: newsForm.image_url,
+      is_active: newsForm.is_active,
+    });
+
+    setLoadingNews(false);
+
+    if (res.success) {
+      showToast("success", res.message || "News item saved successfully!");
+      setEditingNews(null);
+      setNewsForm({
+        title: "",
+        content: "",
+        date: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+        image_url: "",
+        is_active: true,
+      });
+      refreshData();
+    } else {
+      showToast("error", res.error || "Failed to save news item.");
+    }
+  };
+
+  // Edit News Click
+  const handleEditNewsClick = (item: NewsItem) => {
+    setEditingNews(item);
+    setNewsForm({
+      id: item.id,
+      title: item.title,
+      content: item.content,
+      date: item.date,
+      image_url: item.image_url || "",
+      is_active: item.is_active,
+    });
+  };
+
+  // Toggle News Active Status
+  const handleToggleNewsActive = async (item: NewsItem) => {
+    if (!item.id) return;
+    const res = await toggleNewsActiveAction(item.id, item.is_active);
+    if (res.success) {
+      showToast("success", res.message || "Status updated.");
+      refreshData();
+    } else {
+      showToast("error", res.error || "Failed to toggle news status.");
+    }
+  };
+
+  // Delete News Item
+  const handleDeleteNews = async (id?: string) => {
+    if (!id) return;
+    if (!confirm("Are you sure you want to delete this news item?")) return;
+
+    const res = await deleteNewsAction(id);
+    if (res.success) {
+      showToast("success", res.message || "News item deleted.");
+      refreshData();
+    } else {
+      showToast("error", res.error || "Failed to delete news item.");
+    }
+  };
+
   return (
     <div className="space-y-8 pb-16">
       {/* Toast Notification Alert */}
@@ -283,7 +373,7 @@ export default function AdminPortalPage() {
               MCC WNY <span className="text-amber-300">Admin Management Portal</span>
             </h1>
             <p className="text-xs text-emerald-100/90 mt-1">
-              Manage website announcements, fundraising campaigns, and community programs with RLS bypass privileges.
+              Manage website announcements, news, fundraising campaigns, and community programs with RLS bypass privileges.
             </p>
           </div>
 
@@ -331,6 +421,16 @@ export default function AdminPortalPage() {
             📢 1. Top Banner Announcement
           </button>
           <button
+            onClick={() => setActiveTab("news")}
+            className={`px-5 py-3 text-sm font-bold rounded-t-xl transition-all ${
+              activeTab === "news"
+                ? "bg-[#047857] text-white border-t-2 border-amber-400 shadow-md"
+                : "bg-slate-100 text-slate-700 hover:bg-slate-200"
+            }`}
+          >
+            📰 2. Recent News Manager ({news.length})
+          </button>
+          <button
             onClick={() => setActiveTab("projects")}
             className={`px-5 py-3 text-sm font-bold rounded-t-xl transition-all ${
               activeTab === "projects"
@@ -338,7 +438,7 @@ export default function AdminPortalPage() {
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
-            🏗️ 2. Community Projects ({projects.length})
+            🏗️ 3. Community Projects ({projects.length})
           </button>
           <button
             onClick={() => setActiveTab("programs")}
@@ -348,7 +448,7 @@ export default function AdminPortalPage() {
                 : "bg-slate-100 text-slate-700 hover:bg-slate-200"
             }`}
           >
-            🤝 3. Community Programs & Drives ({programs.length})
+            🤝 4. Community Programs ({programs.length})
           </button>
         </div>
 
@@ -468,7 +568,191 @@ export default function AdminPortalPage() {
           </div>
         )}
 
-        {/* TAB 2: COMMUNITY PROJECTS MANAGER */}
+        {/* TAB 2: RECENT NEWS MANAGER */}
+        {activeTab === "news" && (
+          <div className="pt-6 space-y-8">
+            <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-6">
+              {/* Form Header */}
+              <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+                <h2 className="text-base font-extrabold text-slate-900 uppercase tracking-wider">
+                  {editingNews ? `Editing News Item: "${editingNews.title}"` : "Add New News Item / Announcement"}
+                </h2>
+                {editingNews && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingNews(null);
+                      setNewsForm({
+                        title: "",
+                        content: "",
+                        date: new Date().toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" }),
+                        image_url: "",
+                        is_active: true,
+                      });
+                    }}
+                    className="text-xs font-bold text-slate-500 hover:text-slate-800 underline"
+                  >
+                    Cancel Editing
+                  </button>
+                )}
+              </div>
+
+              {/* News Add/Edit Form */}
+              <form onSubmit={handleSaveNews} className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="md:col-span-2 space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Title
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newsForm.title}
+                      onChange={(e) => setNewsForm({ ...newsForm, title: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857]"
+                      placeholder="e.g. Friday Khutbah Schedule & Guest Speaker"
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Publication Date
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={newsForm.date}
+                      onChange={(e) => setNewsForm({ ...newsForm, date: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857]"
+                      placeholder="e.g. August 29, 2026"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-1.5">
+                  <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                    Content Body
+                  </label>
+                  <textarea
+                    required
+                    rows={4}
+                    value={newsForm.content}
+                    onChange={(e) => setNewsForm({ ...newsForm, content: e.target.value })}
+                    className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857]"
+                    placeholder="Enter the full news story or announcement details..."
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider">
+                      Image URL (Optional)
+                    </label>
+                    <input
+                      type="text"
+                      value={newsForm.image_url || ""}
+                      onChange={(e) => setNewsForm({ ...newsForm, image_url: e.target.value })}
+                      className="w-full px-3.5 py-2.5 rounded-lg border border-slate-300 text-sm focus:outline-none focus:ring-2 focus:ring-[#047857]"
+                      placeholder="https://example.com/photo.jpg"
+                    />
+                  </div>
+
+                  <div className="flex items-center gap-3 pt-6">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newsForm.is_active}
+                        onChange={(e) => setNewsForm({ ...newsForm, is_active: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-11 h-6 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#047857]"></div>
+                      <span className="ml-3 text-xs font-bold text-slate-700">Active (Publish on Site)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <div className="flex justify-end pt-2">
+                  <button
+                    type="submit"
+                    disabled={loadingNews}
+                    className="px-6 py-2.5 rounded-xl text-xs font-extrabold bg-[#047857] text-white hover:bg-emerald-800 transition-all shadow-md border border-amber-400/30 disabled:opacity-50"
+                  >
+                    {loadingNews ? "Processing..." : editingNews ? "Update News Item" : "Add News Item"}
+                  </button>
+                </div>
+              </form>
+
+              {/* News List */}
+              <div className="space-y-3 pt-4 border-t border-slate-200">
+                <h3 className="text-xs font-extrabold text-slate-700 uppercase tracking-wider flex items-center justify-between">
+                  <span>Recent News & Announcements ({news.length})</span>
+                  <button type="button" onClick={refreshData} className="text-xs font-semibold text-[#047857] hover:underline">
+                    Refresh List
+                  </button>
+                </h3>
+
+                <div className="divide-y divide-slate-200 border border-slate-200 rounded-xl overflow-hidden">
+                  {news.length === 0 ? (
+                    <div className="p-6 text-center text-xs text-slate-500">
+                      No news items created yet. Use the form above to post your first announcement.
+                    </div>
+                  ) : (
+                    news.map((item) => (
+                      <div key={item.id} className="p-4 bg-white hover:bg-slate-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="space-y-1 max-w-2xl">
+                          <div className="flex items-center gap-2">
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                                item.is_active
+                                  ? "bg-emerald-100 text-emerald-900 border border-emerald-300"
+                                  : "bg-slate-100 text-slate-600 border border-slate-300"
+                              }`}
+                            >
+                              {item.is_active ? "Active" : "Inactive"}
+                            </span>
+                            <span className="text-xs font-semibold text-slate-500">• {item.date}</span>
+                          </div>
+                          <h4 className="text-sm font-bold text-slate-900">{item.title}</h4>
+                          <p className="text-xs text-slate-500 line-clamp-2">{item.content}</p>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleNewsActive(item)}
+                            className={`px-3 py-1.5 text-xs font-bold rounded-lg transition-colors border ${
+                              item.is_active
+                                ? "bg-amber-50 text-amber-800 border-amber-300 hover:bg-amber-100"
+                                : "bg-emerald-50 text-emerald-800 border-emerald-300 hover:bg-emerald-100"
+                            }`}
+                          >
+                            {item.is_active ? "Disable" : "Enable"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleEditNewsClick(item)}
+                            className="px-3.5 py-1.5 text-xs font-bold bg-slate-100 text-slate-800 rounded-lg hover:bg-slate-200 transition-colors border border-slate-300"
+                          >
+                            Edit
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteNews(item.id)}
+                            className="px-3.5 py-1.5 text-xs font-bold bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors border border-red-200"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* TAB 3: COMMUNITY PROJECTS MANAGER */}
         {activeTab === "projects" && (
           <div className="pt-6 space-y-8">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-6">
@@ -691,7 +975,7 @@ export default function AdminPortalPage() {
           </div>
         )}
 
-        {/* TAB 3: COMMUNITY PROGRAMS & DRIVES MANAGER */}
+        {/* TAB 4: COMMUNITY PROGRAMS & DRIVES MANAGER */}
         {activeTab === "programs" && (
           <div className="pt-6 space-y-8">
             <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden p-6 space-y-6">
@@ -852,14 +1136,14 @@ export default function AdminPortalPage() {
                         <button
                           type="button"
                           onClick={() => handleEditProgramClick(prog)}
-                          className="px-3 py-1.5 text-xs font-bold bg-slate-100 text-slate-800 rounded-lg hover:bg-slate-200 transition-colors border border-slate-300"
+                          className="px-3.5 py-1.5 text-xs font-bold bg-slate-100 text-slate-800 rounded-lg hover:bg-slate-200 transition-colors border border-slate-300"
                         >
                           Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteProgram(prog.id)}
-                          className="px-3 py-1.5 text-xs font-bold bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors border border-red-200"
+                          className="px-3.5 py-1.5 text-xs font-bold bg-red-100 text-red-700 rounded-lg hover:bg-red-200 transition-colors border border-red-200"
                         >
                           Delete
                         </button>

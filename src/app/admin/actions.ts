@@ -2,7 +2,7 @@
 
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { createAdminClient, Announcement, Project, Program } from "@/lib/supabase";
+import { createAdminClient, Announcement, Project, Program, NewsItem } from "@/lib/supabase";
 
 export interface ActionResult {
   success: boolean;
@@ -50,16 +50,18 @@ export async function logoutAdmin() {
 export async function getAdminData() {
   const supabaseAdmin = createAdminClient();
 
-  const [annRes, projRes, progRes] = await Promise.all([
+  const [annRes, projRes, progRes, newsRes] = await Promise.all([
     supabaseAdmin.from("announcements").select("*").order("created_at", { ascending: false }).limit(1),
     supabaseAdmin.from("projects").select("*").order("created_at", { ascending: false }),
     supabaseAdmin.from("programs").select("*").order("created_at", { ascending: false }),
+    supabaseAdmin.from("news").select("*").order("date", { ascending: false }),
   ]);
 
   return {
     announcement: annRes.data && annRes.data.length > 0 ? (annRes.data[0] as Announcement) : null,
     projects: (projRes.data || []) as Project[],
     programs: (progRes.data || []) as Program[],
+    news: (newsRes.data || []) as NewsItem[],
   };
 }
 
@@ -240,5 +242,77 @@ export async function deleteProgramAction(id: string): Promise<ActionResult> {
   } catch (err: unknown) {
     const errorObj = err as Error;
     return { success: false, error: errorObj.message || "Failed to delete program." };
+  }
+}
+
+// 4. News & Announcements Server Actions
+export async function saveNewsAction(data: {
+  id?: string;
+  title: string;
+  content: string;
+  date: string;
+  image_url?: string;
+  is_active: boolean;
+}): Promise<ActionResult> {
+  try {
+    const supabaseAdmin = createAdminClient();
+
+    if (data.id) {
+      const { error } = await supabaseAdmin
+        .from("news")
+        .update({
+          title: data.title,
+          content: data.content,
+          date: data.date,
+          image_url: data.image_url || null,
+          is_active: data.is_active,
+        })
+        .eq("id", data.id);
+
+      if (error) throw error;
+      return { success: true, message: "✓ News item updated successfully!" };
+    } else {
+      const { error } = await supabaseAdmin.from("news").insert([{
+        title: data.title,
+        content: data.content,
+        date: data.date,
+        image_url: data.image_url || null,
+        is_active: data.is_active,
+      }]);
+
+      if (error) throw error;
+      return { success: true, message: "✓ New news item added successfully!" };
+    }
+  } catch (err: unknown) {
+    const errorObj = err as Error;
+    return { success: false, error: errorObj.message || "Failed to save news item." };
+  }
+}
+
+export async function toggleNewsActiveAction(id: string, currentActive: boolean): Promise<ActionResult> {
+  try {
+    const supabaseAdmin = createAdminClient();
+    const { error } = await supabaseAdmin
+      .from("news")
+      .update({ is_active: !currentActive })
+      .eq("id", id);
+
+    if (error) throw error;
+    return { success: true, message: `✓ News item status updated to ${!currentActive ? "Active" : "Inactive"}.` };
+  } catch (err: unknown) {
+    const errorObj = err as Error;
+    return { success: false, error: errorObj.message || "Failed to toggle news status." };
+  }
+}
+
+export async function deleteNewsAction(id: string): Promise<ActionResult> {
+  try {
+    const supabaseAdmin = createAdminClient();
+    const { error } = await supabaseAdmin.from("news").delete().eq("id", id);
+    if (error) throw error;
+    return { success: true, message: "✓ News item deleted successfully." };
+  } catch (err: unknown) {
+    const errorObj = err as Error;
+    return { success: false, error: errorObj.message || "Failed to delete news item." };
   }
 }

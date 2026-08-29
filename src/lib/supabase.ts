@@ -68,3 +68,16 @@ export interface Program {
   category?: string;
   schedule?: string;
 }
+
+/**
+ * 4. News Table Interface
+ */
+export interface NewsItem {
+  id?: string;
+  title: string;
+  content: string;
+  date: string;
+  is_active: boolean;
+  image_url?: string;
+  created_at?: string;
+}

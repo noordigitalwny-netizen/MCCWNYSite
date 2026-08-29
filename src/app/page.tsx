@@ -2,43 +2,9 @@ import React from "react";
 import Link from "next/link";
 import ActiveCampaigns from "@/components/ActiveCampaigns";
 import CompletedProjects from "@/components/CompletedProjects";
+import RecentNews from "@/components/RecentNews";
 
 export default function Home() {
-  const newsArticles = [
-    {
-      id: "1",
-      date: "August 28, 2026",
-      category: "Jumu'ah",
-      title: "Friday Jumu'ah Prayer Schedule & Khateeb Announcement",
-      summary:
-        "Join us for Friday Jummah prayers. 1st Shift Khutbah starts at 1:15 PM, 2nd Shift Khutbah starts at 2:15 PM. Please arrive early for parking.",
-    },
-    {
-      id: "2",
-      date: "August 25, 2026",
-      category: "Education",
-      title: "MCC WNY Sunday Islamic School Fall Registration",
-      summary:
-        "Registration for the 2026–2027 Sunday Islamic School is now open for students ages 5 to 16. Classes cover Quran recitation, Islamic studies, and Arabic.",
-    },
-    {
-      id: "3",
-      date: "August 18, 2026",
-      category: "Community Event",
-      title: "Monthly Community Dinner & Family Night",
-      summary:
-        "All community members and families are invited to our monthly gathering after Maghrib prayer. Food will be served followed by a short reminder.",
-    },
-    {
-      id: "4",
-      date: "August 10, 2026",
-      category: "Volunteer",
-      title: "Youth Committee & Mosque Volunteer Opportunities",
-      summary:
-        "We are looking for dedicated youth volunteers to assist with event coordination, facility maintenance, and weekend school activities.",
-    },
-  ];
-
   return (
     <div className="space-y-12 sm:space-y-16 pb-16">
       {/* 1. LiveMosque Widget (Top of page content, directly under navbar) */}
@@ -90,7 +56,7 @@ export default function Home() {
           </h1>
 
           <p className="text-base sm:text-xl text-emerald-100/90 max-w-2xl mx-auto font-light leading-relaxed">
-            Muslim Community Center of Western New York — dedicated to fostering faith, community service, Islamic education, and spiritual growth in Buffalo and WNY.
+            Muslim Community Center of WNY — dedicated to fostering faith, community service, Islamic education, and spiritual growth in Depew and Western New York.
           </p>
 
           {/* Prominent Gold Call-To-Action Button linking to /donate */}
@@ -108,43 +74,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* 3. Two-Column Grid: Recent News (Left) & Facebook Feed (Right) */}
+      {/* 3. Two-Column Grid: Dynamic Recent News (Left) & Facebook Feed (Right) */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
-          {/* Left Column: Recent News (lg:col-span-7) */}
-          <div className="lg:col-span-7 space-y-6">
-            <div className="flex items-center justify-between border-b border-emerald-900/10 pb-3">
-              <h2 className="text-2xl font-extrabold text-emerald-950 flex items-center gap-2">
-                <span className="w-2.5 h-6 bg-[#047857] rounded-full inline-block"></span>
-                Recent News & Announcements
-              </h2>
-              <span className="text-xs font-semibold text-emerald-700 bg-emerald-100/70 px-2.5 py-1 rounded-md">
-                Latest Updates
-              </span>
-            </div>
-
-            <div className="space-y-4">
-              {newsArticles.map((article) => (
-                <article
-                  key={article.id}
-                  className="bg-white p-5 rounded-xl border border-slate-200/90 shadow-sm hover:shadow-md transition-shadow group"
-                >
-                  <div className="flex items-center gap-3 text-xs font-semibold text-emerald-800 mb-2">
-                    <span className="bg-amber-100 text-amber-800 px-2 py-0.5 rounded border border-amber-300/60">
-                      {article.category}
-                    </span>
-                    <span className="text-slate-400">•</span>
-                    <time className="text-slate-500">{article.date}</time>
-                  </div>
-                  <h3 className="text-lg font-bold text-slate-900 group-hover:text-[#047857] transition-colors leading-snug">
-                    {article.title}
-                  </h3>
-                  <p className="text-sm text-slate-600 mt-2 leading-relaxed">
-                    {article.summary}
-                  </p>
-                </article>
-              ))}
-            </div>
+          {/* Left Column: Dynamic Recent News (lg:col-span-7) */}
+          <div className="lg:col-span-7">
+            <RecentNews />
           </div>
 
           {/* Right Column: Facebook Feed Embed (lg:col-span-5) */}
