@@ -4,41 +4,8 @@ import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase, type Project } from "@/lib/supabase";
 
-const fallbackActiveCampaigns: Project[] = [
-  {
-    id: "1",
-    title: "Masjid Expansion & Sister's Community Lounge",
-    category: "Expansion",
-    description:
-      "Expanding our main prayer hall capacity by 300+ worshippers and constructing a modern, multi-purpose sister's lounge & youth center.",
-    status: "Active",
-    goal_amount: 150000,
-    raised_amount: 98500,
-  },
-  {
-    id: "2",
-    title: "Solar Energy & Eco-Masjid Green Initiative",
-    category: "Sustainability",
-    description:
-      "Installing rooftop solar panel arrays to cut annual utility costs and transition MCC WNY to clean, renewable energy.",
-    status: "Active",
-    goal_amount: 45000,
-    raised_amount: 32000,
-  },
-  {
-    id: "3",
-    title: "Youth Center & Gymnasium Upgrade",
-    category: "Youth & Sports",
-    description:
-      "Upgrading indoor sports equipment, carpeting, audio-visual systems, and study spaces for our weekend Islamic school students.",
-    status: "Active",
-    goal_amount: 30000,
-    raised_amount: 12400,
-  },
-];
-
 export default function ActiveCampaigns({ limit }: { limit?: number }) {
-  const [campaigns, setCampaigns] = useState<Project[]>(fallbackActiveCampaigns);
+  const [campaigns, setCampaigns] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -51,12 +18,11 @@ export default function ActiveCampaigns({ limit }: { limit?: number }) {
           .order("created_at", { ascending: false });
 
         if (error) throw error;
-
-        if (data && data.length > 0) {
+        if (data) {
           setCampaigns(data);
         }
       } catch (err) {
-        console.warn("Using default active campaigns fallback:", err);
+        console.warn("Could not fetch active projects from Supabase:", err);
       } finally {
         setLoading(false);
       }
@@ -89,9 +55,17 @@ export default function ActiveCampaigns({ limit }: { limit?: number }) {
         )}
       </div>
 
-      {loading && campaigns.length === 0 ? (
+      {loading ? (
         <div className="p-8 text-center text-xs text-slate-500 font-medium">
-          Loading live active campaigns...
+          Loading active campaigns from database...
+        </div>
+      ) : displayCampaigns.length === 0 ? (
+        <div className="p-10 text-center bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+          <span className="text-3xl">🌱</span>
+          <h3 className="text-sm font-bold text-slate-800">Check back soon for upcoming initiatives!</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            We are currently updating our active fundraising campaigns. Visit our admin portal or check back later.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

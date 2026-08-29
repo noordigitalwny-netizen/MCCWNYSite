@@ -3,47 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { supabase, type Program } from "@/lib/supabase";
 
-const fallbackInitiatives: Program[] = [
-  {
-    id: "cleanup",
-    title: "Neighborhood Clean-Up Drives",
-    category: "Volunteer Program",
-    description:
-      "Join neighbors, youth, and local residents in seasonal street, park, and property cleanup efforts around Depew and Williamsville.",
-    schedule: "Next Drive: Saturday morning at 9:00 AM. Refreshments provided.",
-    is_active: true,
-  },
-  {
-    id: "blood",
-    title: "Mobile Blood Donation Days",
-    category: "Healthcare & Life Saving",
-    description:
-      "Partnering with ConnectLife & American Red Cross to host quarterly blood drives in our community hall to support local hospitals.",
-    schedule: "Next Blood Drive: Fall 2026. Walk-ins & appointments welcome.",
-    is_active: true,
-  },
-  {
-    id: "openhouse",
-    title: '"Know Your Neighbor" Open Houses',
-    category: "Interfaith & Dialogue",
-    description:
-      "Welcoming all WNY neighbors of all backgrounds, faiths, and cultures for guided tours, open Q&A sessions, and shared community dinners.",
-    schedule: "Held quarterly on Sunday afternoons. Open to everyone in Western NY.",
-    is_active: true,
-  },
-  {
-    id: "foodpantry",
-    title: "Community Food Pantry Drives",
-    category: "Social Welfare",
-    description:
-      "Collecting and distributing non-perishable food items, fresh produce, and essential hygiene kits to local food banks and families in need.",
-    schedule: "Drop-off box open Mon–Fri in the main foyer.",
-    is_active: true,
-  },
-];
-
 export default function CommunityPage() {
-  const [programs, setPrograms] = useState<Program[]>(fallbackInitiatives);
+  const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,12 +17,11 @@ export default function CommunityPage() {
           .order("created_at", { ascending: false });
 
         if (error) throw error;
-
-        if (data && data.length > 0) {
+        if (data) {
           setPrograms(data);
         }
       } catch (err) {
-        console.warn("Using default community programs fallback:", err);
+        console.warn("Could not fetch programs from Supabase:", err);
       } finally {
         setLoading(false);
       }
@@ -98,7 +58,7 @@ export default function CommunityPage() {
       </section>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-        {/* 2. Distinct HEARTs Clothing Donation Box Section */}
+        {/* 2. Permanent HEARTs Clothing Donation Box Section */}
         <section className="bg-gradient-to-r from-amber-500/10 via-emerald-900 to-emerald-950 text-white rounded-3xl p-6 sm:p-10 border-2 border-amber-400/40 shadow-2xl relative overflow-hidden">
           {/* Background Decorative Gold Light Flare */}
           <div className="absolute top-0 right-0 w-64 h-64 bg-amber-400/10 rounded-full blur-3xl pointer-events-none"></div>
@@ -164,7 +124,7 @@ export default function CommunityPage() {
           </div>
         </section>
 
-        {/* 3. Community Initiatives Grid (Live Supabase Programs) */}
+        {/* 3. Dynamic Community Programs Grid from Supabase */}
         <section className="space-y-6">
           <div className="border-b border-emerald-900/10 pb-3">
             <h2 className="text-2xl font-extrabold text-emerald-950 flex items-center gap-2">
@@ -176,9 +136,17 @@ export default function CommunityPage() {
             </p>
           </div>
 
-          {loading && programs.length === 0 ? (
+          {loading ? (
             <div className="p-8 text-center text-xs text-slate-500 font-medium">
-              Loading community programs...
+              Loading active community programs from database...
+            </div>
+          ) : programs.length === 0 ? (
+            <div className="p-10 text-center bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+              <span className="text-3xl">🤝</span>
+              <h3 className="text-sm font-bold text-slate-800">Check back soon for upcoming initiatives!</h3>
+              <p className="text-xs text-slate-500 max-w-md mx-auto">
+                No additional community drives are currently listed. Please check back later or contact the office.
+              </p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

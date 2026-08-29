@@ -3,47 +3,8 @@
 import React, { useState, useEffect } from "react";
 import { supabase, type Project } from "@/lib/supabase";
 
-const fallbackCompletedProjects: Project[] = [
-  {
-    id: "c1",
-    title: "Main Prayer Hall Carpet & Acoustic Sound System",
-    category: "Renovation",
-    description:
-      "Installed high-density antimicrobial plush prayer carpeting with woven saf lines, along with a state-of-the-art wireless microphone audio system.",
-    status: "Completed",
-    goal_amount: 55000,
-    raised_amount: 55000,
-    completed_date: "Spring 2026",
-    impact_note: "Serves 500+ daily worshippers with crystal clear sermon sound quality.",
-  },
-  {
-    id: "c2",
-    title: "Community Food Pantry & Cold Storage Unit",
-    category: "Social Welfare",
-    description:
-      "Purchased commercial walk-in refrigeration units to store fresh produce and halal meats for weekly food distribution to local families.",
-    status: "Completed",
-    goal_amount: 25000,
-    raised_amount: 25000,
-    completed_date: "Winter 2025",
-    impact_note: "Distributes over 400+ fresh meal boxes to WNY families every month.",
-  },
-  {
-    id: "c3",
-    title: "Parking Lot Repaving & LED Security Floodlights",
-    category: "Facility Upgrades",
-    description:
-      "Resurfaced the entire parking facility with eco-friendly asphalt, added marked spots, and installed high-efficiency dusk-to-dawn LED security lighting.",
-    status: "Completed",
-    goal_amount: 40000,
-    raised_amount: 40000,
-    completed_date: "Autumn 2025",
-    impact_note: "Ensures safety and smooth traffic flow during Friday Jummah & Isha prayers.",
-  },
-];
-
 export default function CompletedProjects() {
-  const [completedProjects, setCompletedProjects] = useState<Project[]>(fallbackCompletedProjects);
+  const [completedProjects, setCompletedProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -56,12 +17,11 @@ export default function CompletedProjects() {
           .order("created_at", { ascending: false });
 
         if (error) throw error;
-
-        if (data && data.length > 0) {
+        if (data) {
           setCompletedProjects(data);
         }
       } catch (err) {
-        console.warn("Using default completed projects fallback:", err);
+        console.warn("Could not fetch completed projects from Supabase:", err);
       } finally {
         setLoading(false);
       }
@@ -82,9 +42,17 @@ export default function CompletedProjects() {
         </p>
       </div>
 
-      {loading && completedProjects.length === 0 ? (
+      {loading ? (
         <div className="p-8 text-center text-xs text-slate-500 font-medium">
-          Loading past completed projects...
+          Loading past completed projects from database...
+        </div>
+      ) : completedProjects.length === 0 ? (
+        <div className="p-10 text-center bg-slate-50 rounded-2xl border border-slate-200/80 space-y-2">
+          <span className="text-3xl">✨</span>
+          <h3 className="text-sm font-bold text-slate-800">Check back soon for upcoming initiatives!</h3>
+          <p className="text-xs text-slate-500 max-w-md mx-auto">
+            Our completed project gallery will display here as active campaigns finish funding.
+          </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
