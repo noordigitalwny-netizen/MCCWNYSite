@@ -51,6 +51,11 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link href="/islamic-school" className="text-emerald-200 hover:text-amber-300 transition-colors font-medium">
+                  Weekend Islamic School
+                </Link>
+              </li>
+              <li>
                 <Link href="/donate" className="text-emerald-200 hover:text-amber-300 transition-colors font-medium">
                   Support & Donations
                 </Link>

@@ -8,11 +8,11 @@ export default function Navbar() {
 
   const navLinks = [
     { name: "Home", href: "/" },
+    { name: "Islamic School", href: "/islamic-school" },
     { name: "Community", href: "/community" },
     { name: "Projects", href: "/projects" },
     { name: "Admin", href: "/admin" },
     { name: "Prayer Times", href: "/#prayer-times" },
-    { name: "Contact", href: "/#contact" },
   ];
 
   return (
